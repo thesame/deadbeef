@@ -165,4 +165,18 @@ gtkui_get_gui_refresh_rate ();
 void
 gtkui_titlebar_tf_init (void);
 
+typedef struct xsess_conn_s
+{
+    char *sessid;
+    int fd;
+    guint gio_tag;
+    void *ice_conn;
+} xsess_conn_t;
+
+void xsession_process_messages (xsess_conn_t *xsess_conn);
+void xsession_connection_died (xsess_conn_t *xsess_conn);
+int xsession_start (xsess_conn_t *xsess_conn);
+void gtkui_xsess_fd (xsess_conn_t *xsess_conn, int opening);
+char *gtkui_get_state ();
+
 #endif

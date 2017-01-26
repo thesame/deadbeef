@@ -1,5 +1,12 @@
 EXTRA_DIST = deadbeef.glade
 
+if HAVE_SM
+if HAVE_ICE
+SM_LIBADD = $(SM_LIBS) $(ICE_LIBS)
+SM_SOURCES = xsession.c
+endif
+endif
+
 if OS_OSX
 osx_sources = retina.m
 endif

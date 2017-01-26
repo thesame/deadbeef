@@ -1104,6 +1104,47 @@ add_window_init_hook (void (*callback) (void *userdata), void *userdata) {
     window_init_hooks_count++;
 }
 
+static gboolean
+gio_fd_callback (GIOChannel *channel, GIOCondition condition, xsess_conn_t *xsess_conn)
+{
+    if (condition == G_IO_IN)
+        xsession_process_messages (xsess_conn);
+    else if (condition == G_IO_ERR)
+        xsession_connection_died (xsess_conn);
+    else
+    {
+        trace ("Reached unreachable\n");
+    }
+    return TRUE;
+}
+
+void
+gtkui_xsess_fd (xsess_conn_t *xsess_conn, int opening)
+{
+    if (opening)
+    {
+        GIOChannel *channel = g_io_channel_unix_new (xsess_conn->fd);
+        xsess_conn->gio_tag = g_io_add_watch (channel, G_IO_IN | G_IO_ERR, &gio_fd_callback, xsess_conn);
+    }
+    else
+    {
+        g_source_remove (xsess_conn->gio_tag);
+    }
+}
+
+char *
+gtkui_get_state ()
+{
+    int curr_plt = deadbeef->plt_get_curr_idx();
+    int streamer_plt = deadbeef->streamer_get_current_playlist();
+    DB_playItem_t *track = deadbeef->streamer_get_playing_track();
+    int track_nr = deadbeef->pl_get_idx_of (track);
+
+    char *res;
+    asprintf (&res, "%d:%d:%d", curr_plt, streamer_plt, track_nr);
+    return res;
+}
+
 int
 gtkui_thread (void *ctx) {
 #ifdef __linux__
@@ -1246,6 +1287,10 @@ gtkui_thread (void *ctx) {
     if (deadbeef->conf_get_int ("gtkui.start_hidden", 0)) {
         g_idle_add (mainwin_hide_cb, NULL);
     }
+    
+    xsess_conn_t xsess_conn = {0,};
+    xsession_start (&xsess_conn);
+
     gtk_main ();
 
     deadbeef->unlisten_file_added (fileadded_listener_id);
