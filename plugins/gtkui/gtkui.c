@@ -1105,21 +1105,25 @@ add_window_init_hook (void (*callback) (void *userdata), void *userdata) {
 }
 
 static gboolean
-gio_fd_callback (GIOChannel *channel, GIOCondition condition, xsess_conn_t *xsess_conn)
+gio_fd_callback (GIOChannel *channel, GIOCondition condition, gpointer data)
 {
+    xsess_conn_t *xsess_conn = data;
     if (condition == G_IO_IN)
-        xsession_process_messages (xsess_conn);
-    else if (condition == G_IO_ERR)
-        xsession_connection_died (xsess_conn);
-    else
     {
-        trace ("Reached unreachable\n");
+        xsession_process_messages (xsess_conn);
+        return TRUE;
     }
+    if (condition == G_IO_ERR)
+    {
+        xsession_connection_died (xsess_conn);
+        return FALSE;
+    }
+    trace ("Reached unreachable\n");
     return TRUE;
 }
 
 void
-gtkui_xsess_fd (xsess_conn_t *xsess_conn, int opening)
+gtkui_xsess_watch_fd (xsess_conn_t *xsess_conn, int opening)
 {
     if (opening)
     {
@@ -1132,18 +1136,18 @@ gtkui_xsess_fd (xsess_conn_t *xsess_conn, int opening)
     }
 }
 
-char *
-gtkui_get_state ()
-{
-    int curr_plt = deadbeef->plt_get_curr_idx();
-    int streamer_plt = deadbeef->streamer_get_current_playlist();
-    DB_playItem_t *track = deadbeef->streamer_get_playing_track();
-    int track_nr = deadbeef->pl_get_idx_of (track);
-
-    char *res;
-    asprintf (&res, "%d:%d:%d", curr_plt, streamer_plt, track_nr);
-    return res;
-}
+//char *
+//gtkui_get_state ()
+//{
+//    int curr_plt = deadbeef->plt_get_curr_idx();
+//    int streamer_plt = deadbeef->streamer_get_current_playlist();
+//    DB_playItem_t *track = deadbeef->streamer_get_playing_track();
+//    int track_nr = deadbeef->pl_get_idx_of (track);
+//
+//    char *res;
+//    asprintf (&res, "%d:%d:%d", curr_plt, streamer_plt, track_nr);
+//    return res;
+//}
 
 int
 gtkui_thread (void *ctx) {

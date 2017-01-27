@@ -176,7 +176,6 @@ typedef struct xsess_conn_s
 void xsession_process_messages (xsess_conn_t *xsess_conn);
 void xsession_connection_died (xsess_conn_t *xsess_conn);
 int xsession_start (xsess_conn_t *xsess_conn);
-void gtkui_xsess_fd (xsess_conn_t *xsess_conn, int opening);
-char *gtkui_get_state ();
+void gtkui_xsess_watch_fd (xsess_conn_t *xsess_conn, int opening);
 
 #endif
